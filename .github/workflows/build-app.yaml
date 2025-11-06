@@ -1,0 +1,42 @@
+name: Build App
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+  attestations: write
+
+jobs:
+  build-app-image:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: authenticate to chainguard
+        uses: chainguard-dev/setup-chainctl@main
+        with:
+          identity: ${{ secrets.CHAINGUARD_IDENTITY }}
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          build-args: |
+            IMAGE=${{ env.BASE_IMAGE_NAME }}:${{ env.GO_VERSION }}
+          push: true
+          tags: ghcr.io/${{ github.repository }}/${{ env.APP_IMAGE_NAME }}:latest
+          platforms: linux/amd64
+          provenance: false # disable attestations for simplicity

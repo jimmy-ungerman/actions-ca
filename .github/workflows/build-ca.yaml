@@ -2,7 +2,8 @@ name: Build CA
 
 on:
   push:
-    branches: [ main ]
+    paths:
+      - build.yaml
 
 permissions:
   contents: read
@@ -12,7 +13,6 @@ permissions:
 
 env:
   BASE_IMAGE_NAME: go-${{ github.event.repository.name }}-base
-  APP_IMAGE_NAME: go-${{ github.event.repository.name }}
   GO_VERSION: "1.25"
 
 jobs:
@@ -32,57 +32,26 @@ jobs:
         run: |
 
           # Check if image exists
-          if [[ $(chainctl image repo list --parent jimmy.ungerman --repo go-${{ github.event.repository.name }}-base) ]]; then
+          if [[ $(chainctl image repo list --parent jimmy.ungerman --repo ${{ env.BASE_IMAGE_NAME}}) ]]; then
 
             # Apply new build.yaml and check if changes are going to be made
-            if chainctl image repo build apply --parent jimmy.ungerman --repo go-${{ github.event.repository.name }}-base -f build.yaml | grep -q "No changes detected"; then
+            if chainctl image repo build apply --parent jimmy.ungerman --repo ${{ env.BASE_IMAGE_NAME}} -f build.yaml | grep -q "No changes detected"; then
               echo "No changes to base image detected"
             fi
 
-            echo "Updating go-${{ github.event.repository.name }}-base with packages from build.yaml..."
+            echo "Updating ${{ env.BASE_IMAGE_NAME}} with packages from build.yaml..."
 
-            chainctl image repo build apply --parent jimmy.ungerman --repo go-${{ github.event.repository.name }}-base -f build.yaml -y > /dev/null
+            chainctl image repo build apply --parent jimmy.ungerman --repo ${{ env.BASE_IMAGE_NAME}} -f build.yaml -y > /dev/null
 
             sleep 300
           
           else
-            echo "Building new base image go-${{ github.event.repository.name }}-base"
+            echo "Building new base image ${{ env.BASE_IMAGE_NAME}}"
 
-            yes | chainctl image repo build edit --parent jimmy.ungerman --repo go --save-as go-${{ github.event.repository.name }}-base -f build.yaml > /dev/null
+            yes | chainctl image repo build edit --parent jimmy.ungerman --repo go --save-as ${{ env.BASE_IMAGE_NAME}} -f build.yaml > /dev/null
 
-            while ! chainctl image tags list --parent jimmy.ungerman --repo go-${{ github.event.repository.name }}-base > /dev/null; do
+            while ! chainctl image tags list --parent jimmy.ungerman --repo ${{ env.BASE_IMAGE_NAME}} > /dev/null; do
               echo "Waiting for image tags to be available..."
               sleep 15
             done
           fi
-
-  build-app-image:
-    needs: build-base-image
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: authenticate to chainguard
-        uses: chainguard-dev/setup-chainctl@main
-        with:
-          identity: ${{ secrets.CHAINGUARD_IDENTITY }}
-
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Log in to the Container registry
-        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Build and push image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          build-args: |
-            IMAGE=${{ env.APP_IMAGE_NAME }}:${{ env.GO_VERSION }}
-          push: true
-          tags: ghcr.io/${{ github.repository }}/go-${{ github.event.repository.name }}:latest
-          platforms: linux/amd64
-          provenance: false # disable attestations for simplicity
