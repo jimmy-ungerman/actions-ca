@@ -27,7 +27,7 @@ jobs:
         run: |
 
           # Check if image exists
-          if chainctl image repo list --parent jimmy.ungerman --repo go-${{ github.event.repository.name }}-base; then
+          if [[ $(chainctl image repo list --parent jimmy.ungerman --repo go-${{ github.event.repository.name }}-base) ]]; then
 
             # Apply new build.yaml and check if changes are going to be made
             if chainctl image repo build apply --parent jimmy.ungerman --repo go-${{ github.event.repository.name }}-base -f build.yaml | grep -q "No changes detected"; then
