@@ -52,13 +52,14 @@ jobs:
             done
           else
             echo "Building new base image go-${{ github.event.repository.name }}-base"
-            
+
             yes | chainctl image repo build edit --parent jimmy.ungerman --repo go --save-as go-${{ github.event.repository.name }}-base -f build.yaml
 
             while ! chainctl image tags list --parent jimmy.ungerman --repo go-${{ github.event.repository.name }}-base; do
               echo "Waiting for image tags to be available..."
               sleep 15
             done
+          fi
       
       - name: Wait for new CA image to be available
         timeout-minutes: 10
