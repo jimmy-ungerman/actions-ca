@@ -11,29 +11,29 @@ permissions:
   attestations: write
 
 jobs:
-  build-base-image:
-    runs-on: ubuntu-latest
+  # build-base-image:
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - name: authenticate to chainguard
-        uses: chainguard-dev/setup-chainctl@main
-        with:
-          identity: ${{ secrets.CHAINGUARD_IDENTITY }}
+  #   steps:
+  #     - name: authenticate to chainguard
+  #       uses: chainguard-dev/setup-chainctl@main
+  #       with:
+  #         identity: ${{ secrets.CHAINGUARD_IDENTITY }}
 
-      - name: Check out repository
-        uses: actions/checkout@v4
+  #     - name: Check out repository
+  #       uses: actions/checkout@v4
      
-      - name: build-image-with-new-packages
-        run: |
-          yes | chainctl image repo build edit --parent jimmy.ungerman --repo go --save-as go-${{ github.event.repository.name }}-base -f build.yaml
+  #     - name: build-image-with-new-packages
+  #       run: |
+  #         yes | chainctl image repo build edit --parent jimmy.ungerman --repo go --save-as go-${{ github.event.repository.name }}-base -f build.yaml
       
-      - name: Wait for new CA image to be available
-        timeout-minutes: 10
-        run: |
-          while ! chainctl image tags list --parent jimmy.ungerman --repo go-${{ github.event.repository.name }}-base; do
-            echo "Waiting for image tags to be available..."
-            sleep 15
-          done
+  #     - name: Wait for new CA image to be available
+  #       timeout-minutes: 10
+  #       run: |
+  #         while ! chainctl image tags list --parent jimmy.ungerman --repo go-${{ github.event.repository.name }}-base; do
+  #           echo "Waiting for image tags to be available..."
+  #           sleep 15
+  #         done
 
   build-app-image:
     needs: build-base-image
