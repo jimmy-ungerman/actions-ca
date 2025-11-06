@@ -2,15 +2,16 @@ name: Build CA
 
 on:
   push:
-    paths:
-      - build.yaml
+    branches: [ main ]
 
 permissions:
   contents: read
-  id-token: write  # This is needed for OIDC federation.
+  id-token: write
+  packages: write
+  attestations: write
 
 jobs:
-  build-ca-image:
+  build-base-image:
     runs-on: ubuntu-latest
 
     steps:
@@ -29,7 +30,35 @@ jobs:
       - name: Wait for new CA image to be available
         timeout-minutes: 10
         run: |
-          while ! chainctl image repo list --parent jimmy.ungerman | grep go-${{ github.event.repository.name }}-base; do
-            echo "Waiting for image to be available..."
+          while ! chainctl image repo build list --parent jimmy.ungerman --repo go-${{ github.event.repository.name }}-base; do
+            echo "Waiting for image builds to be available..."
             sleep 15
           done
+
+  build-app-image:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: authenticate to chainguard
+        uses: chainguard-dev/setup-chainctl@main
+        with:
+          identity: ${{ secrets.CHAINGUARD_IDENTITY }}
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository }}/go-${{ github.event.repository.name }}:latest
+          platforms: linux/amd64,linux/arm64
+          provenance: false # disable attestations for simplicity
