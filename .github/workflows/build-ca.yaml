@@ -36,20 +36,10 @@ jobs:
 
             echo "Updating go-${{ github.event.repository.name }}-base with packages from build.yaml..."
 
-            chainctl image repo build apply --parent jimmy.ungerman --repo go-${{ github.event.repository.name }}-base -f build.yaml -y
-          
-            while true; do
-              build_pkgs=$(yq -r '.contents.packages[]' build.yaml | sort -u)
-              repo_pkgs=$(chainctl image repo list --parent jimmy.ungerman --repo go-${{ github.event.repository.name }}-base -o json | jq -r '.items [] | .customOverlay.contents.packages[]' | sort -u)
+            chainctl image repo build apply --parent jimmy.ungerman --repo go-${{ github.event.repository.name }}-base -f build.yaml -y > /dev/null
 
-              if [ "$build_pkgs" = "$repo_pkgs" ]; then
-                echo "Build successful"
-                break
-              else
-                echo "❌ Packages differ — checking again in 15 seconds..."
-                sleep 15
-              fi
-            done
+            sleep 300
+          
           else
             echo "Building new base image go-${{ github.event.repository.name }}-base"
 
@@ -59,43 +49,37 @@ jobs:
               echo "Waiting for image tags to be available..."
               sleep 15
             done
+
+            sleep 300
           fi
+
+  build-app-image:
+    needs: build-base-image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: authenticate to chainguard
+        uses: chainguard-dev/setup-chainctl@main
+        with:
+          identity: ${{ secrets.CHAINGUARD_IDENTITY }}
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Wait for new CA image to be available
-        timeout-minutes: 10
-        run: |
-          while ! chainctl image tags list --parent jimmy.ungerman --repo go-${{ github.event.repository.name }}-base; do
-            echo "Waiting for image tags to be available..."
-            sleep 15
-          done
-
-  # build-app-image:
-  #   # needs: build-base-image
-  #   runs-on: ubuntu-latest
-
-  #   steps:
-  #     - name: authenticate to chainguard
-  #       uses: chainguard-dev/setup-chainctl@main
-  #       with:
-  #         identity: ${{ secrets.CHAINGUARD_IDENTITY }}
-
-  #     - name: Check out repository
-  #       uses: actions/checkout@v4
-
-  #     - name: Log in to the Container registry
-  #       uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
-  #       with:
-  #         registry: ghcr.io
-  #         username: ${{ github.actor }}
-  #         password: ${{ secrets.GITHUB_TOKEN }}
-      
-  #     - name: Build and push image
-  #       uses: docker/build-push-action@v6
-  #       with:
-  #         context: .
-  #         build-args: |
-  #           IMAGE=go-${{ github.event.repository.name }}-base:latest
-  #         push: true
-  #         tags: ghcr.io/${{ github.repository }}/go-${{ github.event.repository.name }}:latest
-  #         platforms: linux/amd64
-  #         provenance: false # disable attestations for simplicity
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          build-args: |
+            IMAGE=go-${{ github.event.repository.name }}-base:latest
+          push: true
+          tags: ghcr.io/${{ github.repository }}/go-${{ github.event.repository.name }}:latest
+          platforms: linux/amd64
+          provenance: false # disable attestations for simplicity

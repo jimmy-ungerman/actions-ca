@@ -1,3 +1,4 @@
 contents:
   packages:
     - curl
+    - aws-cli
