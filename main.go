@@ -12,16 +12,16 @@ func main() {
 		osName := runtime.GOOS
 
 		// Try running curl --version
-		cmd := exec.Command("aws", "--version")
+		cmd := exec.Command("curl", "--version")
 		output, err := cmd.CombinedOutput()
 
 		if err != nil {
 			fmt.Fprintf(w, "Running on OS: %s\n\n", osName)
-			fmt.Fprintf(w, "aws check: ❌ not available or failed to run\n")
+			fmt.Fprintf(w, "curl check: ❌ not available or failed to run\n")
 			fmt.Fprintf(w, "error: %v\n", err)
 		} else {
 			fmt.Fprintf(w, "Running on OS: %s\n\n", osName)
-			fmt.Fprintf(w, "aws check: ✅ available and working!\n")
+			fmt.Fprintf(w, "curl check: ✅ available and working!\n")
 			fmt.Fprintf(w, "Output:\n%s\n", output)
 		}
 	})

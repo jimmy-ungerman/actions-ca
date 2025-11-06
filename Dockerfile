@@ -1,4 +1,5 @@
-FROM cgr.dev/jimmy.ungerman/go:latest
+ARG IMAGE="go:latest"
+FROM cgr.dev/jimmy.ungerman/${IMAGE}
 
 WORKDIR /app
 COPY . .
