@@ -1,0 +1,3 @@
+module actions-ca
+
+go 1.24.2

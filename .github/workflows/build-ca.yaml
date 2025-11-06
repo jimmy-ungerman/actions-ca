@@ -1,0 +1,30 @@
+name: Build CA
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  id-token: write  # This is needed for OIDC federation.
+
+jobs:
+  build-ca-image:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: authenticate to chainguard
+        uses: chainguard-dev/setup-chainctl@main
+        with:
+          identity: ${{ secrets.CHAINGUARD_IDENTITY }}
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+     
+      - name: build-image-with-new-packages
+        run: |
+          chainctl image repo list --parent jimmy.ungerman
