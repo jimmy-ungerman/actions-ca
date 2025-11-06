@@ -10,6 +10,11 @@ permissions:
   packages: write
   attestations: write
 
+env:
+  BASE_IMAGE_NAME: go-${{ github.event.repository.name }}-base
+  APP_IMAGE_NAME: go-${{ github.event.repository.name }}
+  GO_VERSION: "1.25"
+
 jobs:
   build-app-image:
     runs-on: ubuntu-latest
