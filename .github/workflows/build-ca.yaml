@@ -24,4 +24,4 @@ jobs:
      
       - name: build-image-with-new-packages
         run: |
-          chainctl image repo build edit --parent jimmy.ungerman --repo go --save-as go-${{ github.event.repository.name }} -f build.yaml
+          yes | chainctl image repo build edit --parent jimmy.ungerman --repo go --save-as go-${{ github.event.repository.name }} -f build.yaml
