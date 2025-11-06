@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - build.yaml
+      
 permissions:
   contents: read
   id-token: write

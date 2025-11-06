@@ -2,3 +2,4 @@ contents:
   packages:
     - curl
     - aws-cli
+    - bzip
