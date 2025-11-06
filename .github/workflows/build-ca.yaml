@@ -59,6 +59,8 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          build-args: |
+            IMAGE=go-${{ github.event.repository.name }}-base:latest
           push: true
           tags: ghcr.io/${{ github.repository }}/go-${{ github.event.repository.name }}:latest
           platforms: linux/amd64,linux/arm64
