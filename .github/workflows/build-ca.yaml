@@ -10,6 +10,11 @@ permissions:
   packages: write
   attestations: write
 
+env:
+  BASE_IMAGE_NAME: go-${{ github.event.repository.name }}-base
+  APP_IMAGE_NAME: go-${{ github.event.repository.name }}
+  GO_VERSION: "1.25"
+
 jobs:
   build-base-image:
     runs-on: ubuntu-latest
@@ -43,14 +48,12 @@ jobs:
           else
             echo "Building new base image go-${{ github.event.repository.name }}-base"
 
-            yes | chainctl image repo build edit --parent jimmy.ungerman --repo go --save-as go-${{ github.event.repository.name }}-base -f build.yaml
+            yes | chainctl image repo build edit --parent jimmy.ungerman --repo go --save-as go-${{ github.event.repository.name }}-base -f build.yaml > /dev/null
 
-            while ! chainctl image tags list --parent jimmy.ungerman --repo go-${{ github.event.repository.name }}-base; do
+            while ! chainctl image tags list --parent jimmy.ungerman --repo go-${{ github.event.repository.name }}-base > /dev/null; do
               echo "Waiting for image tags to be available..."
               sleep 15
             done
-
-            sleep 300
           fi
 
   build-app-image:
@@ -78,7 +81,7 @@ jobs:
         with:
           context: .
           build-args: |
-            IMAGE=go-${{ github.event.repository.name }}-base:latest
+            IMAGE=${{ env.APP_IMAGE_NAME }}:${{ env.GO_VERSION }}
           push: true
           tags: ghcr.io/${{ github.repository }}/go-${{ github.event.repository.name }}:latest
           platforms: linux/amd64
