@@ -40,7 +40,7 @@ jobs:
           
             while true; do
               build_pkgs=$(yq -r '.contents.packages[]' build.yaml | sort -u)
-              repo_pkgs=$(jimmy.ungerman --repo go-${{ github.event.repository.name }}-base -o json | jq -r '.items [] | .customOverlay.contents.packages[]' | sort -u)
+              repo_pkgs=$(chainctl image repo list --parent jimmy.ungerman --repo go-${{ github.event.repository.name }}-base -o json | jq -r '.items [] | .customOverlay.contents.packages[]' | sort -u)
 
               if [ "$build_pkgs" = "$repo_pkgs" ]; then
                 echo "Build successful"
