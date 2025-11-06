@@ -24,4 +24,4 @@ jobs:
      
       - name: build-image-with-new-packages
         run: |
-          chainctl image repo list --parent jimmy.ungerman
+          chainctl image repo list --parent jimmy.ungerman && ls -la
