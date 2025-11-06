@@ -36,6 +36,7 @@ jobs:
           done
 
   build-app-image:
+    needs: build-base-image
     runs-on: ubuntu-latest
 
     steps:
