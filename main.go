@@ -13,21 +13,16 @@ func main() {
 
 		// Try running curl --version
 		cmd := exec.Command("curl", "--version")
-		cmd2 := exec.Command("aws", "--version")
 		output, err := cmd.CombinedOutput()
-		output2, err := cmd2.CombinedOutput()
 
 		if err != nil {
 			fmt.Fprintf(w, "Running on OS: %s\n\n", osName)
 			fmt.Fprintf(w, "curl check: ❌ not available or failed to run\n")
-			fmt.Fprintf(w, "aws check: ❌ not available or failed to run\n")
 			fmt.Fprintf(w, "error: %v\n", err)
 		} else {
 			fmt.Fprintf(w, "Running on OS: %s\n\n", osName)
 			fmt.Fprintf(w, "curl check: ✅ available and working!\n")
-			fmt.Fprintf(w, "aws check: ✅ available and working!\n")
 			fmt.Fprintf(w, "Output:\n%s\n", output)
-			fmt.Fprintf(w, "Output:\n%s\n", output2)
 		}
 	})
 
