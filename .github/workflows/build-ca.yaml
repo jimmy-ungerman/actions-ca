@@ -41,9 +41,23 @@ jobs:
 
             echo "Updating ${{ env.BASE_IMAGE_NAME}} with packages from build.yaml..."
 
+            # Get digest of existing image tag
+            pre_build_digest=$(chainctl image tag list --parent jimmy.ungerman --repo go-actions-ca-base -o json | jq -r '.[] | select(.name == "v1.25.4") | .digest')
+
+            # Apply new image config
             chainctl image repo build apply --parent jimmy.ungerman --repo ${{ env.BASE_IMAGE_NAME}} -f build.yaml -y > /dev/null
 
-            sleep 300
+            # Check until the digest changes
+            while true; do
+              current_digest=$(chainctl image tag list --parent jimmy.ungerman --repo go-actions-ca-base -o json | jq -r '.[] | select(.name == "v1.25.4") | .digest')
+              if [[ "$pre_build_digest" != "$current_digest" ]]; then
+                echo "New base image built"
+              else
+                echo "Building new base image..."
+              fi
+
+              sleep 20
+            done
           
           else
             echo "Building new base image ${{ env.BASE_IMAGE_NAME}}"
