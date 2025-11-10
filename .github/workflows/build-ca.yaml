@@ -52,6 +52,7 @@ jobs:
               current_digest=$(chainctl image tag list --parent jimmy.ungerman --repo go-actions-ca-base -o json | jq -r '.[] | select(.name == "v1.25.4") | .digest')
               if [[ "$pre_build_digest" != "$current_digest" ]]; then
                 echo "New base image built"
+                break
               else
                 echo "Building new base image..."
               fi
